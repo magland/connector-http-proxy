@@ -2,7 +2,7 @@ import cors, { CorsOptions } from 'cors';
 import express, { Express, Request, Response } from 'express';
 import * as http from 'http';
 import { Server as WSServer } from 'ws';
-import { AcknowledgeMessageToService, isInitializeMessageFromService, isResponseToClient, RequestFromClient } from './MCMCMonitorProxyTypes';
+import { AcknowledgeMessageToService, isInitializeMessageFromService, isPingMessageFromService, isResponseToClient, RequestFromClient } from './MCMCMonitorProxyTypes';
 import ServiceManager, { Service } from './ServiceManager';
 
 if (!process.env.PROXY_SECRET) {
@@ -140,6 +140,9 @@ wss.on('connection', (ws) => {
                 return
             }
             service.handleResponseToClient(message)
+        }
+        else if (isPingMessageFromService(message)) {
+            // this is just to keep the connection alive
         }
         else {
             console.error(`Unexpected message from service. Closing ${serviceName}`)

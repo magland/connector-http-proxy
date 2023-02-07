@@ -1,4 +1,4 @@
-import validateObject, { isEqualTo, isNumber, isString, optional } from "./validateObject"
+import validateObject, { isEqualTo, isString, optional } from "./validateObject"
 
 export type RequestFromClient = {
     type: 'requestFromClient'
@@ -51,5 +51,15 @@ export type AcknowledgeMessageToService = {
 export const isAcknowledgeMessageToService = (x: any): x is AcknowledgeMessageToService => {
     return validateObject(x, {
         type: isEqualTo('acknowledge')
+    })
+}
+
+export type PingMessageFromService = {
+    type: 'ping'
+}
+
+export const isPingMessageFromService = (x: any): x is PingMessageFromService => {
+    return validateObject(x, {
+        type: isEqualTo('ping')
     })
 }
