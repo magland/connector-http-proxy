@@ -1,6 +1,6 @@
-# mcmc-monitor-proxy
+# connector-http-proxy
 
-This is a proxy server for MCMC Monitor. It allows MCMC runs to be monitored from remote computers.
+This is HTTP proxy can serve as a signaling server to connect remote clients to services using WebRTC.
 
 ## Hosting a proxy server
 
@@ -8,7 +8,7 @@ This server is designed to run in the cloud on Heroku.
 
 **Step 1: Create a new Heroku project**
 
-Sign up for a [Heroku](https://heroku.com) account and Create a new app. Name it something like `mcmc-monitor-proxy-1`.
+Sign up for a [Heroku](https://heroku.com) account and Create a new app. Name it something like `connector-http-proxy-1`.
 
 **Step 2: Set up a proxy secret**
 
@@ -24,10 +24,10 @@ Follow the instructions in the Heroku web console to install the [Heroku CLI](ht
 heroku login
 
 git clone <this-repo>
-cd mcmc-monitor-proxy
+cd connector-http-proxy
 
 # replace with the name of your project
-heroku git:remote -a mcmc-monitor-proxy-1
+heroku git:remote -a connector-http-proxy-1
 ```
 
 To deploy the server:
@@ -36,4 +36,4 @@ To deploy the server:
 git push heroku main
 ```
 
-Make a note of the URL where the server is being hosted. For example it might be `https://mcmc-monitor-proxy-1.herokuapp.com`. You will share this URL along with the proxy secret to allow users to connect their resources to your proxy server.
+Make a note of the URL where the server is being hosted. For example it might be `https://connector-http-proxy-1.herokuapp.com`. This URL along with the proxy secret will allow clients to connect to services.

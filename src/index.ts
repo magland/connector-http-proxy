@@ -2,7 +2,7 @@ import cors, { CorsOptions } from 'cors';
 import express, { Express, Request, Response } from 'express';
 import * as http from 'http';
 import { Server as WSServer } from 'ws';
-import { AcknowledgeMessageToService, isInitializeMessageFromService, isPingMessageFromService, isResponseToClient, RequestFromClient } from './MCMCMonitorProxyTypes';
+import { AcknowledgeMessageToService, isInitializeMessageFromService, isPingMessageFromService, isResponseToClient, RequestFromClient } from './ConnectorHttpProxyTypes';
 import ServiceManager, { Service } from './ServiceManager';
 
 if (!process.env.PROXY_SECRET) {

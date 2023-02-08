@@ -1,5 +1,5 @@
 import { randomAlphaString } from ".";
-import { RequestFromClient, ResponseToClient } from "./MCMCMonitorProxyTypes";
+import { RequestFromClient, ResponseToClient } from "./ConnectorHttpProxyTypes";
 
 export class Service {
     #responseToClientCallbacks: {[id: string]: (response: ResponseToClient) => void} = {}
