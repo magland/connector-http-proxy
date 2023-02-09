@@ -106,7 +106,6 @@ wss.on('connection', (ws) => {
                 ws.close()
                 return
             }
-            initialized = true
             serviceId = message.serviceId
             const servicePrivateId = message.servicePrivateId
             if (sha1Hash(servicePrivateId).slice(0, 20) !== serviceId) {
@@ -119,6 +118,7 @@ wss.on('connection', (ws) => {
                 ws.close()
                 return
             }
+            initialized = true
             const handleRequestFromClient = (request: RequestFromClient) => {
                 ws.send(JSON.stringify(request))
             }

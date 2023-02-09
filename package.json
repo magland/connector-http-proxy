@@ -8,8 +8,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "PROXY_SECRET=connector-no-secret node dist/index.js",
-    "dev": "PROXY_SECRET=connector-no-secret nodemon src/index.ts"
+    "start": "PROXY_SECRET=mcmc-monitor-no-secret node dist/index.js",
+    "dev": "PROXY_SECRET=mcmc-monitor-no-secret nodemon src/index.ts"
   },
   "author": "Jeremy Magland",
   "license": "Apache-2.0",
