@@ -4,6 +4,7 @@ import * as http from 'http';
 import { Server as WSServer } from 'ws';
 import { AcknowledgeMessageToService, isInitializeMessageFromService, isPingMessageFromService, isResponseToClient, RequestFromClient } from './ConnectorHttpProxyTypes';
 import ServiceManager, { Service } from './ServiceManager';
+import crypto from 'crypto'
 
 if (!process.env.PROXY_SECRET) {
     throw Error(`Environment variable not set: PROXY_SECRET`)
@@ -36,13 +37,13 @@ expressApp.get('/probe', (req: Request, res: Response) => {
     res.send('running.')
 })
 
-expressApp.post('/s/:serviceName/api', (req: Request, res: Response) => {
+expressApp.post('/s/:serviceId/api', (req: Request, res: Response) => {
     ;(async () => {
         const request = req.body
-        const {serviceName} = req.params
-        const service = serviceManager.getService(serviceName)
+        const {serviceId} = req.params
+        const service = serviceManager.getService(serviceId)
         if (!service) {
-            res.status(404).send({message: `service not found: ${serviceName}`})
+            res.status(404).send({message: `service not found: ${serviceId}`})
             return
         }
         
@@ -81,7 +82,7 @@ const wss: WSServer = new WSServer({server: expressServer})
 wss.on('connection', (ws) => {
     console.info('New websocket connection.')
     let initialized = false
-    let serviceName = ''
+    let serviceId = ''
     let service: Service | undefined = undefined
     ws.on('message', msg => {
         const messageJson = msg.toString()
@@ -90,13 +91,13 @@ wss.on('connection', (ws) => {
             message = JSON.parse(messageJson)
         }
         catch(err) {
-            console.error(`Error parsing message. Closing ${serviceName}`)
+            console.error(`Error parsing message. Closing ${serviceId}`)
             ws.close()
             return
         }
         if (isInitializeMessageFromService(message)) {
             if (initialized) {
-                console.error(`Websocket already initialized: ${serviceName}`)
+                console.error(`Websocket already initialized: ${serviceId}`)
                 ws.close()
                 return
             }
@@ -106,17 +107,23 @@ wss.on('connection', (ws) => {
                 return
             }
             initialized = true
-            serviceName = message.serviceName
-            if (serviceManager.hasService(serviceName)) {
-                console.error(`Service already exists: ${serviceName}`)
+            serviceId = message.serviceId
+            const servicePrivateId = message.servicePrivateId
+            if (sha1Hash(servicePrivateId).slice(0, 20) !== serviceId) {
+                console.error(`Invalid private ID for service ID`)
+                ws.close()
+                return
+            }
+            if (serviceManager.hasService(serviceId)) {
+                console.error(`Service already exists: ${serviceId}`)
                 ws.close()
                 return
             }
             const handleRequestFromClient = (request: RequestFromClient) => {
                 ws.send(JSON.stringify(request))
             }
-            console.info(`SERVICE CONNECTED: ${serviceName}`)
-            service = serviceManager.addService(serviceName, handleRequestFromClient)
+            console.info(`SERVICE CONNECTED: ${serviceId}`)
+            service = serviceManager.addService(serviceId, handleRequestFromClient)
             const acknowledgeMessage: AcknowledgeMessageToService = {
                 type:'acknowledge'
             }
@@ -135,7 +142,7 @@ wss.on('connection', (ws) => {
         }
         if (isResponseToClient(message)) {
             if (!message.requestId) {
-                console.error(`No requestId in message from websocket. Closing ${serviceName}`)
+                console.error(`No requestId in message from websocket. Closing ${serviceId}`)
                 ws.close()
                 return
             }
@@ -145,14 +152,14 @@ wss.on('connection', (ws) => {
             // this is just to keep the connection alive
         }
         else {
-            console.error(`Unexpected message from service. Closing ${serviceName}`)
+            console.error(`Unexpected message from service. Closing ${serviceId}`)
             ws.close()
         }
     })
     ws.on('close', () => {
-        if (serviceName) {
-            if (serviceManager.hasService(serviceName)) {
-                serviceManager.removeService(serviceName)
+        if (serviceId) {
+            if (serviceManager.hasService(serviceId)) {
+                serviceManager.removeService(serviceId)
             }
             if (service) {
                 service = undefined
@@ -164,6 +171,12 @@ wss.on('connection', (ws) => {
 expressServer.listen(port, () => {
     return console.log(`[server]: Server is running on port ${port}`)
 })
+
+function sha1Hash(x: string) {
+    const shasum = crypto.createHash('sha1')
+    shasum.update(x)
+    return shasum.digest('hex')
+}
 
 export const randomAlphaString = (num_chars: number) => {
     if (!num_chars) {

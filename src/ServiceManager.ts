@@ -45,31 +45,31 @@ export class Service {
 }
 
 class ServiceManager {
-    services: {[serviceName: string]: Service} = {}
-    getService(serviceName: string): Service | undefined {
-        if (serviceName in this.services) {
-            return this.services[serviceName]
+    services: {[serviceId: string]: Service} = {}
+    getService(serviceId: string): Service | undefined {
+        if (serviceId in this.services) {
+            return this.services[serviceId]
         }
         else {
             return undefined
         }
     }
-    hasService(serviceName: string) {
-        return this.getService(serviceName) !== undefined
+    hasService(serviceId: string) {
+        return this.getService(serviceId) !== undefined
     }
-    addService(serviceName: string, onRequestFromClient: (request: RequestFromClient) => void) {
-        if (this.hasService(serviceName)) {
+    addService(serviceId: string, onRequestFromClient: (request: RequestFromClient) => void) {
+        if (this.hasService(serviceId)) {
             throw Error('unexpected. service already exists.')
         }
         const r = new Service(onRequestFromClient)
-        this.services[serviceName] = r
+        this.services[serviceId] = r
         return r
     }
-    removeService(serviceName: string) {
-        if (!this.hasService(serviceName)) {
+    removeService(serviceId: string) {
+        if (!this.hasService(serviceId)) {
             throw Error('unexpected. cannot remove service that does not exist.')
         }
-        delete this.services[serviceName]
+        delete this.services[serviceId]
     }
 }
 
