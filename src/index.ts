@@ -14,7 +14,9 @@ if (!process.env.PROXY_SECRET) {
 
 const expressApp: Express = express()
 
-const allowedOrigins = ['https://flatironinstitute.github.io', 'http://127.0.0.1:5173', 'http://localhost:5173']
+// TODO: need to make this configurable
+const allowedOrigins = ['https://flatironinstitute.github.io', 'https://scratchrealm.github.com', 'https://magland.github.com', 'http://127.0.0.1:5173', 'http://localhost:5173']
+
 const corsOptions: CorsOptions = {
     origin: (origin, callback) => {
         if (allowedOrigins.includes(origin)) {

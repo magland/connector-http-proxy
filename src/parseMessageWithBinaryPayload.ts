@@ -21,7 +21,7 @@ const parseMessageWithBinaryPayload = (m: Buffer | ArrayBuffer | string): {messa
         }
         else {
             const dec = new TextDecoder('utf-8')
-            return {message: JSON.parse(dec.decode(m.slice(0, ii)))}
+            return {message: JSON.parse(dec.decode(m))}
         }
     }
     else {
