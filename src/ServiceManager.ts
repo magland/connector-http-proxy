@@ -2,27 +2,27 @@ import { randomAlphaString } from ".";
 import { RequestFromClient, ResponseToClient } from "./ConnectorHttpProxyTypes";
 
 export class Service {
-    #responseToClientCallbacks: {[id: string]: (response: ResponseToClient) => void} = {}
+    #responseToClientCallbacks: {[id: string]: (response: ResponseToClient, binaryPayload: Buffer | ArrayBuffer | undefined) => void} = {}
     constructor(private onRequestFromClient: (req: RequestFromClient) => void) {
 
     }
     handleRequestFromClient(request: RequestFromClient) {
         this.onRequestFromClient(request)
     }
-    handleResponseToClient(response: ResponseToClient) {
+    handleResponseToClient(response: ResponseToClient, binaryPayload: Buffer | ArrayBuffer | undefined) {
         for (const id in this.#responseToClientCallbacks) {
-            this.#responseToClientCallbacks[id](response)
+            this.#responseToClientCallbacks[id](response, binaryPayload)
         }
     }
-    async waitForResponseToClient(requestId: string, timeoutMsec: number): Promise<ResponseToClient | undefined> {
+    async waitForResponseToClient(requestId: string, timeoutMsec: number): Promise<{response: ResponseToClient, binaryPayload: Buffer | ArrayBuffer | undefined} | undefined> {
         return new Promise((resolve) => {
             let finished = false
-            const deleteCallback = this._onResponseToClient(response => {
+            const deleteCallback = this._onResponseToClient((response, binaryPayload) => {
                 if (response.requestId === requestId) {
                     if (!finished) {
                         finished = true
                         deleteCallback()
-                        resolve(response)
+                        resolve({response, binaryPayload})
                     }
                 }
             })
@@ -35,7 +35,7 @@ export class Service {
             }, timeoutMsec)
         })
     }
-    _onResponseToClient(callback: (response: ResponseToClient) => void) {
+    _onResponseToClient(callback: (response: ResponseToClient, binaryPayload: Buffer | ArrayBuffer | undefined) => void) {
         const id = randomAlphaString(10)
         this.#responseToClientCallbacks[id] = callback
         return () => {

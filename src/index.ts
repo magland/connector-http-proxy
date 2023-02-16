@@ -5,6 +5,8 @@ import { Server as WSServer } from 'ws';
 import { AcknowledgeMessageToService, isInitializeMessageFromService, isPingMessageFromService, isResponseToClient, RequestFromClient } from './ConnectorHttpProxyTypes';
 import ServiceManager, { Service } from './ServiceManager';
 import crypto from 'crypto'
+import parseMessageWithBinaryPayload from './parseMessageWithBinaryPayload';
+import createMessageWithBinaryPayload from './createMessageWithBinaryPayload';
 
 if (!process.env.PROXY_SECRET) {
     throw Error(`Environment variable not set: PROXY_SECRET`)
@@ -61,17 +63,18 @@ expressApp.post('/s/:serviceId/api', (req: Request, res: Response) => {
         //     }
         // })
 
-        const response = await service.waitForResponseToClient(rr.requestId, 5000)
-        if (!response) {
+        const rsp = await service.waitForResponseToClient(rr.requestId, 5000)
+        if (!rsp) {
             res.status(504).send({message: `timeout waiting for response`})
             return
         }
-        if (response.error) {
-            res.status(404).send(`error handling request ${request.type}: ${response.error}`)
+        if (rsp.response.error) {
+            res.status(404).send(`error handling request ${request.type}: ${rsp.response.error}`)
             return
         }
         // gotResponse = true
-        res.send(response.response)
+        const mm = createMessageWithBinaryPayload(rsp.response, rsp.binaryPayload)
+        res.send(mm)
     })().catch(err => {
         // internal server error
         res.status(500).send({message: err.message})
@@ -85,16 +88,12 @@ wss.on('connection', (ws) => {
     let serviceId = ''
     let service: Service | undefined = undefined
     ws.on('message', msg => {
-        const messageJson = msg.toString()
-        let message: any
-        try {
-            message = JSON.parse(messageJson)
-        }
-        catch(err) {
-            console.error(`Error parsing message. Closing ${serviceId}`)
+        if (!((msg instanceof Buffer) || (msg instanceof ArrayBuffer))) {
+            console.error(`Invalid type for message: ${serviceId}`)
             ws.close()
             return
         }
+        const {message, binaryPayload} = parseMessageWithBinaryPayload(msg)
         if (isInitializeMessageFromService(message)) {
             if (initialized) {
                 console.error(`Websocket already initialized: ${serviceId}`)
@@ -146,7 +145,7 @@ wss.on('connection', (ws) => {
                 ws.close()
                 return
             }
-            service.handleResponseToClient(message)
+            service.handleResponseToClient(message, binaryPayload)
         }
         else if (isPingMessageFromService(message)) {
             // this is just to keep the connection alive
