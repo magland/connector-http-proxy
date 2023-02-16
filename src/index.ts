@@ -73,7 +73,7 @@ expressApp.post('/s/:serviceId/api', (req: Request, res: Response) => {
             return
         }
         // gotResponse = true
-        const mm = createMessageWithBinaryPayload(rsp.response, rsp.binaryPayload)
+        const mm = createMessageWithBinaryPayload(rsp.response.response, rsp.binaryPayload)
         res.send(mm)
     })().catch(err => {
         // internal server error
