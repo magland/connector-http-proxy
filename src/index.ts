@@ -103,7 +103,7 @@ wss.on('connection', (ws) => {
                 return
             }
             if (message.proxySecret !== process.env.PROXY_SECRET) {
-                console.error(`${message.proxySecret} <> process.env.PROXY_SECRET`)
+                console.error(`${message.proxySecret} <> ${process.env.PROXY_SECRET}`)
                 console.error(`Incorrect proxy secret. Closing.`)
                 ws.close()
                 return
