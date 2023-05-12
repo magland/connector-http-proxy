@@ -2,7 +2,7 @@ import cors, { CorsOptions } from 'cors';
 import express, { Express, Request, Response } from 'express';
 import * as http from 'http';
 import { Server as WSServer } from 'ws';
-import { AcknowledgeMessageToService, isInitializeMessageFromService, isPingMessageFromService, isResponseToClient, RequestFromClient } from './ConnectorHttpProxyTypes';
+import { AcknowledgeMessageToService, isInitializeMessageFromService, isPingMessageFromService, isResponseToClient, isResponseToClientPart, RequestFromClient } from './ConnectorHttpProxyTypes';
 import ServiceManager, { Service } from './ServiceManager';
 import crypto from 'crypto'
 import parseMessageWithBinaryPayload from './parseMessageWithBinaryPayload';
@@ -149,6 +149,14 @@ wss.on('connection', (ws) => {
                 return
             }
             service.handleResponseToClient(message, binaryPayload)
+        }
+        else if (isResponseToClientPart(message)) {
+            if (!message.requestId) {
+                console.error(`No requestId in message part from websocket. Closing ${serviceId}`)
+                ws.close()
+                return
+            }
+            service.handleResponseToClientPart(message, binaryPayload)
         }
         else if (isPingMessageFromService(message)) {
             // this is just to keep the connection alive
